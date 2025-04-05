@@ -11,18 +11,20 @@
 		background-color: #fde68a !important; /* 黃色高亮 */
 	}
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  <!-- SupaBase 後端 -->
 </head>
 <body class="bg-gray-100 text-gray-800">
   <div class="max-w-2xl mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4 text-center">音樂教室預約系統</h1>
 
-    <!-- 選擇教室 -->
+    <!-- 教室按鈕 -->
     <div class="grid grid-cols-2 gap-4 mb-6">
-      <button onclick="selectRoom('Room 1')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 1</button>
-      <button onclick="selectRoom('Room 2')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 2</button>
-      <button onclick="selectRoom('Room 3')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 3</button>
-      <button onclick="selectRoom('Room 4')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 4</button>
-    </div>
+		<button onclick="selectRoom('小琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">小琴房</button>
+		<button onclick="selectRoom('大琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">大琴房</button>
+		<button onclick="selectRoom('平台琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">平台琴房</button>
+		<button onclick="selectRoom('地下室')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">地下室</button>
+		<button onclick="selectRoom('活動場地')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">活動場地</button>
+	</div>
 
     <!-- 日曆顯示區 -->
     <div id="calendar" class="mb-6 hidden">
@@ -46,92 +48,118 @@
   </div>
 
   <script>
-    const backendUrl = 'https://script.google.com/macros/s/AKfycbxglV5EDxQhBy9ZWmdj1Wfn4a3QknDcA1jSEUdol0wVYlKYl17U11ZudI6_oq0Rqg2x8Q/exec'; // 替換成你的 Apps Script URL
+	const supabaseUrl = 'https://vvhsucjkomeffodahhdu.supabase.co';
+	const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio';
+	const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  
+    <!-- const backendUrl = 'https://script.google.com/macros/s/AKfycbxglV5EDxQhBy9ZWmdj1Wfn4a3QknDcA1jSEUdol0wVYlKYl17U11ZudI6_oq0Rqg2x8Q/exec'; // 替換成你的 Apps Script URL -->
 
     let selectedRoom = '';
     let selectedDate = '';
 
     function selectRoom(room) {
-		selectedRoom = room;
+    selectedRoom = room;
 
-		// 移除所有按鈕的 selected
-		document.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+    // 移除所有教室按鈕的 selected 樣式
+    document.querySelectorAll('.room-button').forEach(btn => btn.classList.remove('selected'));
 
-		// 標記點擊的按鈕
-		const roomButtons = document.querySelectorAll('button');
-		roomButtons.forEach(btn => {
-			if (btn.textContent.includes(room.slice(-1))) {
-			btn.classList.add('selected');
-			}
+    // 把選到的按鈕加上樣式
+    const roomButtons = document.querySelectorAll('button');
+    roomButtons.forEach(btn => {
+      if (btn.textContent === room) {
+        btn.classList.add('selected');
+      }
     });
 
-  document.getElementById('calendar').classList.remove('hidden');
-  buildCalendar();
-}
+    document.getElementById('calendar').classList.remove('hidden');
+    buildCalendar(); // 每次選房間都重建日曆
+	}
 
     function buildCalendar() {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = today.getMonth();
+		const calendarGrid = document.getElementById('calendar-grid');
+		const calendarTitle = document.getElementById('calendar-title');
+		calendarGrid.innerHTML = '';
 
-      const calendarTitle = `${year}年${month + 1}月`;
-      document.getElementById('calendar-title').innerText = calendarTitle;
+		const today = new Date();
+		const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+		const lastAllowedDate = new Date(todayOnly);
+		lastAllowedDate.setDate(lastAllowedDate.getDate() + 30);
 
-      const calendarGrid = document.getElementById('calendar-grid');
-      calendarGrid.innerHTML = '';
+		calendarTitle.innerText = `請選擇日期（未來 30 天內）`;
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+		// 計算要顯示的兩個月
+		const thisMonth = today.getMonth();
+		const thisYear = today.getFullYear();
 
-      for (let i = 0; i < firstDay; i++) {
-        calendarGrid.innerHTML += '<div></div>';
-      }
+		const monthsToShow = [0, 1]; // 本月與下月
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dateBtn = document.createElement('button');
-        dateBtn.innerText = d;
-        dateBtn.className = 'bg-white rounded-lg p-2 shadow hover:bg-yellow-100';
-        dateBtn.onclick = () => {
-          selectedDate = `${year}-${(month+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
-		  // 移除其他已選日期
-			document.querySelectorAll('#calendar-grid button').forEach(b => b.classList.remove('selected'));
-			dateBtn.classList.add('selected');
-          document.getElementById('time-picker').classList.remove('hidden');
-          document.getElementById('message').innerText = `選擇日期：${selectedDate}`;
-        };
-        calendarGrid.appendChild(dateBtn); 	
-      }
-    }
+		monthsToShow.forEach(offset => {
+			const monthDate = new Date(thisYear, thisMonth + offset);
+			const year = monthDate.getFullYear();
+			const month = monthDate.getMonth();
+
+			// 月份標題
+			const monthLabel = document.createElement('div');
+			monthLabel.className = "col-span-7 font-bold text-lg mt-4";
+			monthLabel.innerText = `${year}年${month + 1}月`;
+			calendarGrid.appendChild(monthLabel);
+
+			const firstDay = new Date(year, month, 1).getDay();
+			const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+			for (let i = 0; i < firstDay; i++) {
+			calendarGrid.innerHTML += '<div></div>';
+			}
+
+			for (let d = 1; d <= daysInMonth; d++) {
+			const date = new Date(year, month, d);
+
+			const dateBtn = document.createElement('button');
+			dateBtn.innerText = d;
+			dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300 hover:bg-yellow-100';
+
+			if (date < todayOnly || date > lastAllowedDate) {
+				dateBtn.classList.add('opacity-30');
+				dateBtn.disabled = true;
+			} else {
+				dateBtn.onclick = () => {
+				selectedDate = `${year}-${(month + 1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+				document.querySelectorAll('#calendar-grid button').forEach(b => b.classList.remove('selected'));
+				dateBtn.classList.add('selected');
+				document.getElementById('time-picker').classList.remove('hidden');
+				document.getElementById('message').innerText = `選擇日期：${selectedDate}`;
+				};
+			}
+
+			calendarGrid.appendChild(dateBtn);
+			}
+		});
+	}
 
     async function submitReservation() {
-		const startTime = document.getElementById('start-time').value;
-		const endTime = document.getElementById('end-time').value;
-		if (!selectedRoom || !selectedDate || !startTime || !endTime) {
+	const startTime = document.getElementById('start-time').value;
+	const endTime = document.getElementById('end-time').value;
+  
+	if (!selectedRoom || !selectedDate || !startTime || !endTime) {
 		alert('請填寫所有預約資料！');
-		return;
-		}
+    return;
+	}
 
-		try {
-	const response = await fetch(backendUrl, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
+	const { data, error } = await supabase.from('reservations').insert([{
 		room: selectedRoom,
 		date: selectedDate,
-		start: startTime,
-		end: endTime
-		})
-	});
-	const result = await response.json();
-	if (result.error) {
-		document.getElementById('message').innerText = `⚠️ ${result.error}`;
+		start_time: startTime,
+		end_time: endTime
+	}]);
+
+	if (error) {
+		document.getElementById('message').innerText = `❌ 預約失敗：${error.message}`;
 	} else {
-		document.getElementById('message').innerText = '✅ 預約成功！';
+		document.getElementById('message').innerText = `✅ 預約成功！`;
 	}
-	} catch (error) {
-	document.getElementById('message').innerText = '❌ 無法連線後端，請稍後再試。';
-	}	
 	}
+	
+
   </script>
 </body>
 </html>
