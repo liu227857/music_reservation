@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>音樂教室預約</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800">
+  <div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4 text-center">音樂教室預約系統</h1>
+
+    <!-- 選擇教室 -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <button onclick="selectRoom('Room 1')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 1</button>
+      <button onclick="selectRoom('Room 2')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 2</button>
+      <button onclick="selectRoom('Room 3')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 3</button>
+      <button onclick="selectRoom('Room 4')" class="bg-white rounded-xl p-4 shadow hover:bg-gray-200">教室 4</button>
+    </div>
+
+    <!-- 日曆顯示區 -->
+    <div id="calendar" class="mb-6 hidden">
+      <h2 class="text-xl font-semibold mb-2" id="calendar-title"></h2>
+      <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+    </div>
+
+    <!-- 時間選擇區 -->
+    <div id="time-picker" class="hidden">
+      <label for="start-time" class="block mb-2">開始時間：</label>
+      <input type="time" id="start-time" class="w-full p-2 border rounded mb-4">
+
+      <label for="end-time" class="block mb-2">結束時間：</label>
+      <input type="time" id="end-time" class="w-full p-2 border rounded mb-4">
+
+      <button onclick="submitReservation()" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">送出預約</button>
+    </div>
+
+    <!-- 回饋訊息 -->
+    <p id="message" class="mt-4 text-center font-medium"></p>
+  </div>
+
+  <script>
+    const backendUrl = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'; // 替換成你的 Apps Script URL
+
+    let selectedRoom = '';
+    let selectedDate = '';
+
+    function selectRoom(room) {
+      selectedRoom = room;
+      document.getElementById('calendar').classList.remove('hidden');
+      buildCalendar();
+    }
+
+    function buildCalendar() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+
+      const calendarTitle = `${year}年${month + 1}月`;
+      document.getElementById('calendar-title').innerText = calendarTitle;
+
+      const calendarGrid = document.getElementById('calendar-grid');
+      calendarGrid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        calendarGrid.innerHTML += '<div></div>';
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateBtn = document.createElement('button');
+        dateBtn.innerText = d;
+        dateBtn.className = 'bg-white rounded-lg p-2 shadow hover:bg-yellow-100';
+        dateBtn.onclick = () => {
+          selectedDate = `${year}-${(month+1).toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+          document.getElementById('time-picker').classList.remove('hidden');
+          document.getElementById('message').innerText = `選擇日期：${selectedDate}`;
+        };
+        calendarGrid.appendChild(dateBtn);
+      }
+    }
+
+    async function submitReservation() {
+      const startTime = document.getElementById('start-time').value;
+      const endTime = document.getElementById('end-time').value;
+      if (!selectedRoom || !selectedDate || !startTime || !endTime) {
+        alert('請填寫所有預約資料！');
+        return;
+      }
+
+      const response = await fetch(backendUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room: selectedRoom,
+          date: selectedDate,
+          start: startTime,
+          end: endTime
+        })
+      });
+
+      document.getElementById('message').innerText = '已送出預約（若無重複則會成功）';
+      document.getElementById('time-picker').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
