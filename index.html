@@ -83,28 +83,37 @@
     }
 
     async function submitReservation() {
-      const startTime = document.getElementById('start-time').value;
-      const endTime = document.getElementById('end-time').value;
-      if (!selectedRoom || !selectedDate || !startTime || !endTime) {
-        alert('請填寫所有預約資料！');
-        return;
-      }
+		const startTime = document.getElementById('start-time').value;
+		const endTime = document.getElementById('end-time').value;
+		if (!selectedRoom || !selectedDate || !startTime || !endTime) {
+		alert('請填寫所有預約資料！');
+		return;
+	}
 
-      const response = await fetch(backendUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          room: selectedRoom,
-          date: selectedDate,
-          start: startTime,
-          end: endTime
-        })
-      });
+		try {
+		const response = await fetch(backendUrl, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({
+			room: selectedRoom,
+			date: selectedDate,
+			start: startTime,
+			end: endTime
+		})
+		});
 
-      document.getElementById('message').innerText = '已送出預約（若無重複則會成功）';
-      document.getElementById('time-picker').classList.add('hidden');
-    }
+		const result = await response.json();
+		if (result.error) {
+		document.getElementById('message').innerText = `❌ 預約失敗：${result.error}`;
+		} else {
+		document.getElementById('message').innerText = `✅ 預約成功！`;
+		document.getElementById('time-picker').classList.add('hidden');
+		}
+	} catch (error) {
+		console.error(error);
+		document.getElementById('message').innerText = '⚠️ 無法連線後端，請稍後再試。';
+	}
+	}
   </script>
 </body>
 </html>
