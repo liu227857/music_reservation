@@ -19,11 +19,11 @@
 
     <!-- 教室按鈕 -->
     <div class="grid grid-cols-2 gap-4 mb-6">
-		<button onclick="selectRoom('小琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">小琴房</button>
-		<button onclick="selectRoom('大琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">大琴房</button>
-		<button onclick="selectRoom('平台琴房')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">平台琴房</button>
-		<button onclick="selectRoom('地下室')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">地下室</button>
-		<button onclick="selectRoom('活動場地')" class="bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">活動場地</button>
+		<button onclick="selectRoom('小琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">小琴房</button>
+		<button onclick="selectRoom('大琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">大琴房</button>
+		<button onclick="selectRoom('平台琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">平台琴房</button>
+		<button onclick="selectRoom('地下室')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">地下室</button>
+		<button onclick="selectRoom('活動場地')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">活動場地</button>
 	</div>
 
     <!-- 日曆顯示區 -->
@@ -51,8 +51,6 @@
 	const supabaseUrl = 'https://vvhsucjkomeffodahhdu.supabase.co';
 	const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio';
 	const supabase = supabase.createClient(supabaseUrl, supabaseKey);
-  
-    <!-- const backendUrl = 'https://script.google.com/macros/s/AKfycbxglV5EDxQhBy9ZWmdj1Wfn4a3QknDcA1jSEUdol0wVYlKYl17U11ZudI6_oq0Rqg2x8Q/exec'; // 替換成你的 Apps Script URL -->
 
     let selectedRoom = '';
     let selectedDate = '';
@@ -137,28 +135,46 @@
 	}
 
     async function submitReservation() {
-	const startTime = document.getElementById('start-time').value;
-	const endTime = document.getElementById('end-time').value;
-  
-	if (!selectedRoom || !selectedDate || !startTime || !endTime) {
-		alert('請填寫所有預約資料！');
-    return;
-	}
+		const startTime = document.getElementById('start-time').value;
+		const endTime = document.getElementById('end-time').value;
 
-	const { data, error } = await supabase.from('reservations').insert([{
-		room: selectedRoom,
-		date: selectedDate,
-		start_time: startTime,
-		end_time: endTime
-	}]);
-
-	if (error) {
-		document.getElementById('message').innerText = `❌ 預約失敗：${error.message}`;
-	} else {
-		document.getElementById('message').innerText = `✅ 預約成功！`;
-	}
-	}
+		if (!selectedRoom || !selectedDate || !startTime || !endTime) {
+			alert('請填寫所有預約資料！');
+			return;
+		}
 	
+		// ⚠️ 查詢是否有時間重疊的預約
+		const { data: existingReservations, error: queryError } = await supabase
+			.from('reservations')
+			.select('*')
+			.eq('room', selectedRoom)
+			.eq('date', selectedDate)
+			.or(`and(start_time,lt.${endTime}),and(end_time,gt.${startTime})`);
+
+		if (queryError) {
+			document.getElementById('message').innerText = `❌ 查詢失敗：${queryError.message}`;
+		return;
+		}
+
+		if (existingReservations.length > 0) {
+			document.getElementById('message').innerText = '❌ 時段已被預約，請選擇其他時間';
+		return;
+		}
+
+		// 沒有衝突就送出預約
+		const { data, error } = await supabase.from('reservations').insert([{
+			room: selectedRoom,
+			date: selectedDate,
+			start_time: startTime,
+			end_time: endTime
+		}]);
+
+		if (error) {
+			document.getElementById('message').innerText = `❌ 預約失敗：${error.message}`;
+		} else {
+		document.getElementById('message').innerText = `✅ 預約成功！`;
+		}
+	}
 
   </script>
 </body>
