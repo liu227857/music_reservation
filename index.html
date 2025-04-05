@@ -8,8 +8,11 @@
   
   <style>
 	.selected {
-		background-color: #fde68a !important; /* 黃色高亮 */
+		background-color: #A1CAF1 !important; /* 黃色高亮 */
 	}
+	.room-button:hover {
+    background-color: #A1CAF1 !important;
+    }
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
@@ -18,11 +21,11 @@
 
     <!-- 教室按鈕 -->
     <div class="grid grid-cols-2 gap-4 mb-6">
-		<button onclick="selectRoom('小琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">小琴房</button>
-		<button onclick="selectRoom('大琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">大琴房</button>
-		<button onclick="selectRoom('平台琴房')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">平台琴房</button>
-		<button onclick="selectRoom('地下室')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">地下室</button>
-		<button onclick="selectRoom('活動場地')" class="room-button bg-white rounded-xl p-4 shadow hover:bg-yellow-100 transition-colors duration-300">活動場地</button>
+		<button onclick="selectRoom('小琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">小琴房</button>
+		<button onclick="selectRoom('大琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">大琴房</button>
+		<button onclick="selectRoom('平台琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">平台琴房</button>
+		<button onclick="selectRoom('地下室')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">地下室</button>
+		<button onclick="selectRoom('活動場地')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">活動場地</button>
 	</div>
 
     <!-- 日曆顯示區 -->
@@ -39,7 +42,7 @@
       <label for="end-time" class="block mb-2">結束時間：</label>
       <input type="time" id="end-time" class="w-full p-2 border rounded mb-4">
 
-      <button onclick="submitReservation()" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">送出預約</button>
+      <button onclick="submitReservation()" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors duration-300">送出預約</button>
     </div>
 
     <!-- 回饋訊息 -->
@@ -120,7 +123,14 @@
             const date = new Date(year, month, d);
             const dateBtn = document.createElement('button');
             dateBtn.innerText = d;
-            dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300 hover:bg-yellow-100';
+            dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300';
+			dateBtn.style.setProperty('transition-property', 'background-color');
+				dateBtn.addEventListener('mouseenter', () => {
+				dateBtn.style.backgroundColor = '#A1CAF1';  // 更改hover顏色
+			});
+			dateBtn.addEventListener('mouseleave', () => {
+				dateBtn.style.backgroundColor = '';  // 恢復原來顏色
+			});
 
             if (date.getTime() < todayOnly.getTime() || date.getTime() > lastAllowedDate.getTime()) {
                 dateBtn.classList.add('opacity-30');
@@ -139,7 +149,7 @@
             calendarGrid.appendChild(dateBtn);
         }
     });
-}
+    }
 
 
     async function submitReservation() {
