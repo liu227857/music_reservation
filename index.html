@@ -52,7 +52,7 @@
   <script>
 	const supabaseUrl = 'https://vvhsucjkomeffodahhdu.supabase.co';
 	const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio';
-	const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+	const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);  // ✅ 改名避免命名衝突
 
     let selectedRoom = '';
     let selectedDate = '';
@@ -146,7 +146,7 @@
 		}
 	
 		// ⚠️ 查詢是否有時間重疊的預約
-		const { data: existingReservations, error: queryError } = await supabase
+		const { data: existingReservations, error: queryError } = await supabaseClient
 			.from('reservations')
 			.select('*')
 			.eq('room', selectedRoom)
@@ -164,7 +164,7 @@
 		}
 
 		// 沒有衝突就送出預約
-		const { data, error } = await supabase.from('reservations').insert([{
+		const { data, error } = await supabaseClient.from('reservations').insert([{
 			room: selectedRoom,
 			date: selectedDate,
 			start_time: startTime,
