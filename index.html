@@ -88,7 +88,7 @@
 		if (!selectedRoom || !selectedDate || !startTime || !endTime) {
 		alert('請填寫所有預約資料！');
 		return;
-	}
+		}
 
 		try {
 		const response = await fetch(backendUrl, {
@@ -109,10 +109,11 @@
 		document.getElementById('message').innerText = `✅ 預約成功！`;
 		document.getElementById('time-picker').classList.add('hidden');
 		}
-	} catch (error) {
+		} 
+		catch (error) {
 		console.error(error);
 		document.getElementById('message').innerText = '⚠️ 無法連線後端，請稍後再試。';
-	}
+		}
 	}
   </script>
 </body>
