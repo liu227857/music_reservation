@@ -158,25 +158,39 @@
 
 		if (!selectedRoom || !selectedDate || !startTime || !endTime) {
 			alert('請填寫所有預約資料！');
-			return;
+        return;
 		}
-	
+
+		// 轉換時間為 Date 物件來進行比較
+		const startDateTime = new Date(`${selectedDate}T${startTime}`);
+		const endDateTime = new Date(`${selectedDate}T${endTime}`);
+
+		// 設定禁止的時間範圍：早上9點與晚上9點
+		const nineAM = new Date(`${selectedDate}T09:00:00`);
+		const ninePM = new Date(`${selectedDate}T21:00:00`);
+
+		// 檢查預約時間是否在允許範圍內
+		if (startDateTime < nineAM || endDateTime > ninePM) {
+			document.getElementById('message').innerText = '❌ 預約時間只能在 09:00 到 21:00 之間！';
+        return;
+		}
+
 		// ⚠️ 查詢是否有時間重疊的預約
 		const { data: existingReservations, error: queryError } = await supabaseClient
 			.from('reservations')
 			.select('*')
 			.eq('room', selectedRoom)
 			.eq('date', selectedDate)
-			.or(`and(start_time,lt.${endTime}),and(end_time,gt.${startTime})`);
+			.or(`and(start_time.lt."${endTime}",end_time.gt."${startTime}")`);
 
 		if (queryError) {
 			document.getElementById('message').innerText = `❌ 查詢失敗：${queryError.message}`;
-		return;
+        return;
 		}
 
 		if (existingReservations.length > 0) {
 			document.getElementById('message').innerText = '❌ 時段已被預約，請選擇其他時間';
-		return;
+        return;
 		}
 
 		// 沒有衝突就送出預約
@@ -190,7 +204,7 @@
 		if (error) {
 			document.getElementById('message').innerText = `❌ 預約失敗：${error.message}`;
 		} else {
-		document.getElementById('message').innerText = `✅ 預約成功！`;
+			document.getElementById('message').innerText = `✅ 預約成功！`;
 		}
 	}
 
