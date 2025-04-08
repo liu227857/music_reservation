@@ -291,18 +291,20 @@
 
 
 
-
-
 	// 這是當用戶選擇日期後，顯示填寫個人資料區域
 	function showUserInfo() {
 	  document.getElementById('user-info').classList.remove('hidden');
 	}
+
+
 
 	// 在選擇日期之後呼叫此函數來顯示用戶資料填寫區域
 	function selectDate(date) {
 	  selectedDate = date;
 	  showUserInfo();
 	}
+
+
 
 	// 提交預約函數
 	async function submitReservation() {
@@ -344,9 +346,6 @@
 		showMessage(`❌ 預約失敗：${error.message}`);
 	  } else {
       showMessage('✅ 預約成功！');
-
-      // 發送確認郵件
-      //sendConfirmationEmail(name, email); // 假設你有這樣的函數來發送郵件
 
       // 清空選擇
       selectedSlots = [];

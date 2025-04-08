@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>預約管理後台</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 text-sm">
+  <h1 class="text-2xl font-bold mb-4">🎹 預約管理後台</h1>
+
+  <div class="flex flex-wrap gap-4 items-center mb-4">
+    <input type="date" id="filter-date" class="border p-2 rounded">
+    <select id="filter-room" class="border p-2 rounded">
+      <option value="">全部琴房</option>
+      <option value="小琴房">小琴房</option>
+      <option value="大琴房">大琴房</option>
+      <option value="平台琴房">平台琴房</option>
+      <option value="地下室">地下室</option>
+    </select>
+    <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded">查詢</button>
+  </div>
+
+  <!-- 查詢結果表格容器 -->
+  <div id="results-container" class="hidden mt-4">
+	<table class="w-full bg-white rounded shadow">
+      <thead class="bg-blue-100">
+		<tr>
+          <th class="p-2 text-left">日期</th>
+          <th class="p-2 text-left">時間</th>
+          <th class="p-2 text-left">琴房</th>
+          <th class="p-2 text-left">姓名</th>
+          <th class="p-2 text-left">電話</th>
+          <th class="p-2 text-left">操作</th>
+        </tr>
+      </thead>
+      <tbody id="reservation-table"></tbody>
+	</table>
+  </div>
+
+
+  <h2 class="text-xl mt-8 font-bold">➕ 新增預約</h2>
+  <div class="grid grid-cols-2 gap-4 mt-2">
+    <input id="new-date" type="date" class="border p-2 rounded" placeholder="日期">
+    <select id="new-room" class="border p-2 rounded">
+      <option value="小琴房">小琴房</option>
+      <option value="大琴房">大琴房</option>
+      <option value="平台琴房">平台琴房</option>
+      <option value="地下室">地下室</option>
+    </select>
+    <input id="new-start" type="time" class="border p-2 rounded" placeholder="開始時間">
+    <input id="new-end" type="time" class="border p-2 rounded" placeholder="結束時間">
+    <input id="new-name" type="text" class="border p-2 rounded" placeholder="姓名">
+    <input id="new-phone" type="text" class="border p-2 rounded" placeholder="電話">
+    <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded">新增</button>
+  </div>
+
+
+
+
+  <script> 
+    const supabaseClient = supabase.createClient(
+	'https://vvhsucjkomeffodahhdu.supabase.co',
+	'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio'
+	);
+
+
+
+    async function loadReservations() {
+      const date = document.getElementById('filter-date').value;
+      const room = document.getElementById('filter-room').value;
+
+      let query = supabaseClient.from('reservations').select('*');
+      if (date) query = query.eq('date', date);
+      if (room) query = query.eq('room', room);
+
+      const { data, error } = await query.order('date', { ascending: true }).order('start_time');
+      if (error) return alert('查詢失敗');
+
+      const tbody = document.getElementById('reservation-table');
+      tbody.innerHTML = '';
+      for (const r of data) {
+        console.log('產生按鈕 id:', r.id);
+	  const tr = document.createElement('tr');
+		tr.innerHTML = `
+		<td class="p-2">${r.date}</td>
+		<td class="p-2">${r.start_time} - ${r.end_time}</td>
+		<td class="p-2">${r.room}</td>
+		<td class="p-2">${r.name || ''}</td>
+		<td class="p-2">${r.phone || ''}</td>
+		<td class="p-2">
+		<button onclick="deleteReservation('${r.id}')" class="bg-red-500 text-white px-2 py-1 rounded">刪除</button>
+		</td>`;
+        tbody.appendChild(tr);
+      }
+	  document.getElementById('results-container').classList.remove('hidden');
+    }
+
+
+
+
+    async function deleteReservation(id) {
+      if (!confirm('確認要刪除這筆預約嗎？')) return;
+      const { error } = await supabaseClient.from('reservations').delete().eq('id', id);
+      if (error) return alert('刪除失敗');
+      loadReservations();
+    }
+
+
+
+    async function addReservation() {
+      const date = document.getElementById('new-date').value;
+      const room = document.getElementById('new-room').value;
+      const start = document.getElementById('new-start').value;
+      const end = document.getElementById('new-end').value;
+      const name = document.getElementById('new-name').value;
+      const phone = document.getElementById('new-phone').value;
+
+      if (!date || !start || !end || !room) return alert('請填寫完整資訊');
+      const { error } = await supabaseClient.from('reservations').insert({
+        date, room, start_time: start, end_time: end, name, phone
+      });
+      if (error) return alert('新增失敗');
+
+      alert('新增成功');
+      loadReservations();
+    }
+  </script>
+</body>
+</html>
