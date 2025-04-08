@@ -59,7 +59,6 @@
     <div id="user-info" class="mt-6 hidden">
         <h3 class="text-xl font-semibold mb-4">請填寫您的資料</h3>
         <input type="text" id="user-name" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的名字" required>
-        <input type="email" id="user-email" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的信箱" required>
         <input type="text" id="user-phone" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的電話" required>
     </div>
 
@@ -308,10 +307,9 @@
 	// 提交預約函數
 	async function submitReservation() {
 	  const name = document.getElementById('user-name').value.trim();
-	  const email = document.getElementById('user-email').value.trim();
 	  const phone = document.getElementById('user-phone').value.trim();
 
-	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !email || !phone) {
+	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone) {
       showMessage('❌ 請填寫所有預約資料！');
     return;
 	}
@@ -353,7 +351,6 @@
       // 清空選擇
       selectedSlots = [];
       document.getElementById('user-name').value = '';
-      document.getElementById('user-email').value = '';
       document.getElementById('user-phone').value = '';  // 清空電話欄位
 
       loadTimeSlots();
