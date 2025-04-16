@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>音樂教室預約</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    .selected {
+      background-color: #A1CAF1 !important;
+    }
+    .room-button:hover {
+      background-color: #A1CAF1 !important;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Spinner -->
+  <div id="spinner" class="fixed inset-0 flex items-center justify-center bg-white bg-opacity-70 hidden z-50">
+	<div class="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 hidden z-50">
+    <div class="bg-white p-6 rounded-xl shadow-lg max-w-sm w-full text-center">
+		<p id="modal-message" class="text-lg font-medium mb-4"></p>
+      <button onclick="closeModal()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">
+        關閉
+      </button>
+    </div>
+  </div>
+
+   <div class="max-w-2xl mx-auto p-6">
+    <h1 class="text-2xl font-bold mb-4 text-center">音樂教室預約系統</h1>
+
+    <!-- 教室按鈕 -->
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <button onclick="selectRoom('小琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">小琴房</button>
+      <button onclick="selectRoom('大琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">大琴房</button>
+      <button onclick="selectRoom('平台琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">平台琴房</button>
+      <button onclick="selectRoom('地下室')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">地下室</button>
+    </div>
+
+    <!-- 日曆 -->
+    <div id="calendar" class="mb-6 hidden">
+      <h2 class="text-xl font-semibold mb-2" id="calendar-title"></h2>
+      <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+    </div>
+
+    <!-- 時間區塊 -->
+    <div id="time-slots" class="grid grid-cols-3 gap-2 mt-4"></div>
+
+    <!-- 隱藏欄位儲存時間 -->
+    <input type="hidden" id="start-time">
+    <input type="hidden" id="end-time">
+	
+	 <!-- 用戶資訊表單，選擇日期後顯示 -->
+    <div id="user-info" class="mt-6 hidden">
+        <h3 class="text-xl font-semibold mb-4">請填寫您的資料</h3>
+        <input type="text" id="user-name" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的名字" required>
+        <input type="text" id="user-phone" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的電話" required>
+    </div>
+
+    <!-- 回饋訊息 -->
+    <p id="message" class="mt-4 text-center font-medium"></p>
+
+    <!-- 預約按鈕 -->
+    <div class="flex justify-center mt-4">
+      <button onclick="submitReservation()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">提交預約</button>
+    </div>
+  </div>
+
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const supabaseClient = supabase.createClient(
+      'https://vvhsucjkomeffodahhdu.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio'
+    );
+
+    let selectedRoom = '';
+    let selectedDate = '';
+    let selectedSlots = [];
+
+    function showMessage(msg) {
+      document.getElementById('modal-message').innerText = msg;
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    function selectRoom(room) {
+      selectedRoom = room;
+      selectedDate = '';
+      document.querySelectorAll('.room-button').forEach(btn => btn.classList.remove('selected'));
+      document.querySelectorAll('button').forEach(btn => {
+        if (btn.textContent === room) btn.classList.add('selected');
+      });
+      document.getElementById('calendar').classList.remove('hidden');
+      document.getElementById('time-slots').innerHTML = '';
+      document.getElementById('message').innerText = '';
+      buildCalendar();
+    }
+
+
+
+	function buildCalendar() {
+	  const calendarGrid = document.getElementById('calendar-grid');
+	  const calendarTitle = document.getElementById('calendar-title');
+	  calendarGrid.innerHTML = '';
+
+	  const today = new Date();
+	  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+	  const lastAllowedDate = new Date(todayOnly);
+	  lastAllowedDate.setDate(lastAllowedDate.getDate() + 30);
+      calendarTitle.innerText = `請選擇日期（未來 30 天內）`;
+
+	  const monthsToShow = [0, 1];
+	  const thisMonth = today.getMonth();
+	  const thisYear = today.getFullYear();
+
+	  monthsToShow.forEach(offset => {
+      const monthDate = new Date(thisYear, thisMonth + offset);
+      const year = monthDate.getFullYear();
+      const month = monthDate.getMonth();
+
+      const monthLabel = document.createElement('div');
+      monthLabel.className = "col-span-7 font-bold text-lg mt-4";
+      monthLabel.innerText = `${year}年${month + 1}月`;
+      calendarGrid.appendChild(monthLabel);
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i++) {
+        calendarGrid.appendChild(document.createElement('div'));
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d);
+        const dateBtn = document.createElement('button');
+        dateBtn.innerText = d;
+        dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300';
+
+        // 檢查日期是否在可選範圍內，禁用不可選的日期
+        if (date < todayOnly || date > lastAllowedDate) {
+          dateBtn.classList.add('opacity-30');
+          dateBtn.disabled = true;
+        } else {
+          dateBtn.onclick = () => {
+            selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            document.querySelectorAll('#calendar-grid button').forEach(b => b.classList.remove('selected'));
+            dateBtn.classList.add('selected');
+            showMessage(`選擇日期：${selectedDate}`);
+            loadTimeSlots();
+        };
+
+          // 添加 hover 效果
+          dateBtn.addEventListener('mouseenter', () => {
+            if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
+              dateBtn.style.backgroundColor = '#A1CAF1';  // 改變背景色
+              dateBtn.style.color = 'black';  // 改變文字顏色
+            }
+          });
+
+          dateBtn.addEventListener('mouseleave', () => {
+            if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
+              dateBtn.style.backgroundColor = 'white';  // 恢復背景色
+              dateBtn.style.color = 'black';  // 恢復文字顏色
+            }
+          });
+        }
+
+        calendarGrid.appendChild(dateBtn);
+        }
+	});
+	}
+	
+
+
+
+	async function loadTimeSlots() {
+	  const container = document.getElementById('time-slots');
+	  container.innerHTML = '';
+	  selectedSlots = [];
+	  const startHour = 9;
+	  const endHour = 21;
+	  
+	  // 找尋過去時段
+	  const now = new Date();
+	  const currentDateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+	  const currentTimeInt = parseInt(`${now.getHours()}${String(now.getMinutes()).padStart(2, '0')}`);
+
+	  // 從 Supabase 獲取已預約的時間段
+	  const { data: reservations, error } = await supabaseClient
+		.from('reservations')
+		.select('start_time, end_time')
+		.eq('room', selectedRoom)
+		.eq('date', selectedDate);
+
+	if (error) {
+      console.error('Error fetching reservations:', error);
+    return;
+	}
+
+	// 將已預約的時間段轉換為數字格式
+	const reserved = (reservations || []).map(r => ({
+      start: parseInt(r.start_time.slice(0, 5).replace(":", "")),
+      end: parseInt(r.end_time.slice(0, 5).replace(":", ""))
+    }));
+
+	// 創建時間選項按鈕
+	for (let hour = startHour; hour < endHour; hour++) {
+		for (let min = 0; min < 60; min += 30) {
+		  const start = `${String(hour).padStart(2, '0')}:${min === 0 ? '00' : '30'}`;
+		  const end = `${String(min === 0 ? hour : hour + 1).padStart(2, '0')}:${min === 0 ? '30' : '00'}`;
+
+		  // 將時間轉換為數字格式，便於比較
+		  const startTime = parseInt(start.replace(":", ""));
+		  const endTime = parseInt(end.replace(":", ""));
+
+		  // 檢查該時段是否已經被預約
+		  const isTaken = reserved.some(r => {
+		  const reservedStart = r.start;
+		  const reservedEnd = r.end;
+		  
+		  // 檢查時間段是否有重疊
+		  return startTime < reservedEnd && endTime > reservedStart;
+		  });
+		  
+		  // 禁用過去時間
+		  const isPast = selectedDate === currentDateStr && startTime < currentTimeInt;
+
+		  const btn = document.createElement('button');
+			btn.textContent = `${start} - ${end}`;
+			btn.dataset.start = start;
+			btn.dataset.end = end;
+
+			btn.disabled = isTaken || isPast;
+
+			// 統一用 opacity 控制禁用效果
+			btn.className = `px-2 py-1 rounded border text-sm transition duration-200 ${
+			  (isTaken || isPast)
+			  ? 'opacity-30 cursor-not-allowed'
+			  : 'bg-white text-black hover:bg-[#A1CAF1]'
+			}`;
+
+		  // 禁用 hover 效果：當時間被預約，禁止 hover 動效
+		  if (!isTaken) {
+			btn.addEventListener('mouseenter', () => {
+			if (!selectedSlots.some(s => s.start === start && s.end === end)) {
+              btn.style.backgroundColor = '#A1CAF1'; // Hover 顏色
+			}
+		  });
+          btn.addEventListener('mouseleave', () => {
+            if (!selectedSlots.some(s => s.start === start && s.end === end)) {
+              btn.style.backgroundColor = 'white'; // 恢復原本顏色
+            }
+          });
+        }
+
+		// 點擊選擇時間段
+		btn.addEventListener('click', () => {
+          const selected = selectedSlots.some(s => s.start === start && s.end === end);
+          if (selected) {
+            selectedSlots = selectedSlots.filter(s => s.start !== start || s.end !== end);
+            btn.style.backgroundColor = 'white';
+            btn.classList.remove('text-white');
+            btn.classList.add('text-black');
+          } else {
+            selectedSlots.push({ start, end });
+            btn.style.backgroundColor = '#A1CAF1';
+            btn.classList.add('text-black');
+          }
+
+          const userInfo = document.getElementById('user-info');
+          if (userInfo) {
+            userInfo.classList.toggle('hidden', selectedSlots.length === 0);
+          }
+        });
+
+      container.appendChild(btn);
+		}
+	}
+	}
+
+
+
+
+	// 這是當用戶選擇日期後，顯示填寫個人資料區域
+	function showUserInfo() {
+	  document.getElementById('user-info').classList.remove('hidden');
+	}
+
+
+
+	// 在選擇日期之後呼叫此函數來顯示用戶資料填寫區域
+	function selectDate(date) {
+	  selectedDate = date;
+	  showUserInfo();
+	}
+
+
+
+	// 提交預約函數
+	async function submitReservation() {
+	  const name = document.getElementById('user-name').value.trim();
+	  const phone = document.getElementById('user-phone').value.trim();
+
+	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone) {
+      showMessage('❌ 請填寫所有預約資料！');
+    return;
+	}
+
+	// 檢查是否有衝突
+	for (let slot of selectedSlots) {
+      const { data: existing, error } = await supabaseClient
+        .from('reservations')
+        .select('*')
+        .eq('room', selectedRoom)
+        .eq('date', selectedDate)
+        .gt('end_time', slot.start)
+        .lt('start_time', slot.end);
+      if (existing.length > 0) {
+        showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
+      return;
+    }
+   }
+
+	const inserts = selectedSlots.map(slot => ({
+      room: selectedRoom,
+      date: selectedDate,
+      start_time: slot.start,
+      end_time: slot.end,
+      name,
+      phone  // 儲存電話
+    }));
+
+	const { error } = await supabaseClient.from('reservations').insert(inserts);
+
+	  if (error) {
+		showMessage(`❌ 預約失敗：${error.message}`);
+	  } else {
+      showMessage('✅ 預約成功！');
+
+      // 清空選擇
+      selectedSlots = [];
+      document.getElementById('user-name').value = '';
+      document.getElementById('user-phone').value = '';  // 清空電話欄位
+
+      loadTimeSlots();
+	  }
+    }
+
+
+  </script>
+</body>
+</html>
+
