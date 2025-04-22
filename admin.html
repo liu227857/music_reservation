@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>預約管理後台</title>
+  <title>小木笛預約管理後台</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6 text-sm">
-  <h1 class="text-2xl font-bold mb-4">🎹 預約管理後台</h1>
+  <h1 class="text-2xl font-bold mb-4">小木笛預約管理後台</h1>
 
   <div class="flex flex-wrap gap-4 items-center mb-4">
     <input type="date" id="filter-date" class="border p-2 rounded">
@@ -18,6 +18,7 @@
       <option value="大琴房">大琴房</option>
       <option value="平台琴房">平台琴房</option>
       <option value="地下室">地下室</option>
+	  <option value="地下室">活動場地</option>
     </select>
     <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded">查詢</button>
   </div>
@@ -32,6 +33,7 @@
           <th class="p-2 text-left">琴房</th>
           <th class="p-2 text-left">姓名</th>
           <th class="p-2 text-left">電話</th>
+		  <th class="p-2 text-left">信箱</th>
           <th class="p-2 text-left">操作</th>
         </tr>
       </thead>
@@ -48,11 +50,13 @@
       <option value="大琴房">大琴房</option>
       <option value="平台琴房">平台琴房</option>
       <option value="地下室">地下室</option>
+	  <option value="地下室">活動場地</option>
     </select>
     <input id="new-start" type="time" class="border p-2 rounded" placeholder="開始時間">
     <input id="new-end" type="time" class="border p-2 rounded" placeholder="結束時間">
     <input id="new-name" type="text" class="border p-2 rounded" placeholder="姓名">
     <input id="new-phone" type="text" class="border p-2 rounded" placeholder="電話">
+	<input id="new-mail" type="text" class="border p-2 rounded" placeholder="信箱">
     <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded">新增</button>
   </div>
 
@@ -89,6 +93,7 @@
 		<td class="p-2">${r.room}</td>
 		<td class="p-2">${r.name || ''}</td>
 		<td class="p-2">${r.phone || ''}</td>
+		<td class="p-2">${r.mail || ''}</td>
 		<td class="p-2">
 		<button onclick="deleteReservation('${r.id}')" class="bg-red-500 text-white px-2 py-1 rounded">刪除</button>
 		</td>`;
@@ -116,10 +121,11 @@
       const end = document.getElementById('new-end').value;
       const name = document.getElementById('new-name').value;
       const phone = document.getElementById('new-phone').value;
+	  const mail = document.getElementById('new-mail').value;
 
       if (!date || !start || !end || !room) return alert('請填寫完整資訊');
       const { error } = await supabaseClient.from('reservations').insert({
-        date, room, start_time: start, end_time: end, name, phone
+        date, room, start_time: start, end_time: end, name, phone, mail
       });
       if (error) return alert('新增失敗');
 

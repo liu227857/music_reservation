@@ -41,6 +41,7 @@
       <button onclick="selectRoom('大琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">大琴房</button>
       <button onclick="selectRoom('平台琴房')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">平台琴房</button>
       <button onclick="selectRoom('地下室')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">地下室</button>
+	  <button onclick="selectRoom('活動場地')" class="room-button bg-white rounded-xl p-4 shadow transition-colors duration-300">活動場地</button>
     </div>
 
     <!-- 日曆 -->
@@ -61,6 +62,7 @@
         <h3 class="text-xl font-semibold mb-4">請填寫您的資料</h3>
         <input type="text" id="user-name" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的名字" required>
         <input type="text" id="user-phone" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的電話" required>
+		<input type="text" id="user-mail" class="w-full p-2 mb-4 border rounded" placeholder="請輸入您的信箱" required>
     </div>
 
     <!-- 回饋訊息 -->
@@ -291,7 +293,6 @@
 
 
 
-
 	// 這是當用戶選擇日期後，顯示填寫個人資料區域
 	function showUserInfo() {
 	  document.getElementById('user-info').classList.remove('hidden');
@@ -311,8 +312,9 @@
 	async function submitReservation() {
 	  const name = document.getElementById('user-name').value.trim();
 	  const phone = document.getElementById('user-phone').value.trim();
+	  const mail = document.getElementById('user-mail').value.trim();
 
-	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone) {
+	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone || !mail) {
       showMessage('❌ 請填寫所有預約資料！');
     return;
 	}
@@ -338,7 +340,8 @@
       start_time: slot.start,
       end_time: slot.end,
       name,
-      phone  // 儲存電話
+      phone,
+	  mail// 儲存電話
     }));
 
 	const { error } = await supabaseClient.from('reservations').insert(inserts);
@@ -352,6 +355,7 @@
       selectedSlots = [];
       document.getElementById('user-name').value = '';
       document.getElementById('user-phone').value = '';  // 清空電話欄位
+	  document.getElementById('user-mail').value = '';  // 清空電話欄位
 
       loadTimeSlots();
 	  }
