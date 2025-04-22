@@ -9,6 +9,7 @@
   <style>
     .selected {
       background-color: #A1CAF1 !important;
+	  color: black !important;
     }
     .room-button:hover {
       background-color: #A1CAF1 !important;
@@ -156,10 +157,23 @@
         } else {
           dateBtn.onclick = () => {
             selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            document.querySelectorAll('#calendar-grid button').forEach(b => b.classList.remove('selected'));
-            dateBtn.classList.add('selected');
-            showMessage(`選擇日期：${selectedDate}`);
-            loadTimeSlots();
+
+			// 移除舊的選取樣式 & 回復樣式
+			document.querySelectorAll('#calendar-grid button').forEach(b => {
+			b.classList.remove('selected');
+			if (!b.disabled) {
+			  b.style.backgroundColor = 'white';
+			  b.style.color = 'black';
+			}
+			});
+
+			// 套用新的選取樣式
+			dateBtn.classList.add('selected');
+			dateBtn.style.backgroundColor = '#A1CAF1';
+			dateBtn.style.color = 'black';
+
+			showMessage(`選擇日期：${selectedDate}`);
+			loadTimeSlots();
         };
 
           // 添加 hover 效果
