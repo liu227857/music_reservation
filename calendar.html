@@ -94,7 +94,12 @@
 		
 		
       eventClick: async function (info) {
-        const confirmDelete = confirm(`確定要刪除這個預約嗎？\n預約者：${info.event.extendedProps.name}`);
+        const confirmDelete = confirm(
+		  `確定要刪除這個預約嗎？\n` +
+		  `預約者：${info.event.extendedProps.name}\n` +
+		  `教室：${info.event.extendedProps.room}\n` +
+		  `電話：${info.event.extendedProps.phone}`
+		);
         if (!confirmDelete) return;
 
         // 取得日期與時間欄位對應記錄
@@ -157,11 +162,15 @@
       }
 
       return data.map(r => ({
-        title: `${r.name || ''} (${r.room})`, // 顯示姓名加房間
-        start: `${r.date}T${r.start_time}`,
-        end: `${r.date}T${r.end_time}`,
-        name: r.name || '',
-      }));
+		title: `${r.name || ''} (${r.room})`, // 顯示姓名加房間
+		start: `${r.date}T${r.start_time}`,
+		end: `${r.date}T${r.end_time}`,
+		extendedProps: {
+		  name: r.name || '',
+		  room: r.room || '',    // 預約的房間
+		  phone: r.phone || '',  // 預約的電話
+		}
+	  }));
     }
 	
 	
