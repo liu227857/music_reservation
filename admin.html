@@ -20,7 +20,8 @@
       <option value="鼓室">鼓室</option>
 	  <option value="活動場地">活動場地</option>
     </select>
-    <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded">查詢</button>
+    <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-500 transition">查詢</button>
+	<button id="exportExcelBtn" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-800 transition"> 匯出 Excel </button>
   </div>
 
   <!-- 查詢結果表格容器 -->
@@ -57,12 +58,12 @@
     <input id="new-name" type="text" class="border p-2 rounded" placeholder="姓名">
     <input id="new-phone" type="text" class="border p-2 rounded" placeholder="電話">
 	<input id="new-mail" type="text" class="border p-2 rounded" placeholder="信箱">
-    <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded">新增</button>
+    <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition">新增</button>
   </div>
 
 
 
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script> 
     const supabaseClient = supabase.createClient(
 	'https://vvhsucjkomeffodahhdu.supabase.co',
@@ -132,6 +133,45 @@
       alert('新增成功');
       loadReservations();
     }
+	
+	
+	
+  document.getElementById('exportExcelBtn').addEventListener('click', async () => {
+	const { data, error } = await supabaseClient
+      .from('reservations')
+      .select('*');
+
+	if (error) {
+      alert('讀取預約資料失敗');
+      console.error(error);
+      return;
+  }
+
+    // 根據日期 + 開始時間排序
+    data.sort((a, b) => {
+      const dateA = `${a.date}T${a.start_time}`;
+      const dateB = `${b.date}T${b.start_time}`;
+      return new Date(dateA) - new Date(dateB);
+    });
+
+    // 轉換成 Excel 資料格式
+    const exportData = data.map(item => ({
+      日期: item.date,
+      開始時間: item.start_time,
+      結束時間: item.end_time,
+	  房間: item.room,
+	  預約人: item.name,
+      電話: item.phone,
+      信箱: item.mail,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "預約資料");
+
+    // 下載 Excel
+    XLSX.writeFile(workbook, "預約資料.xlsx");
+  });
   </script>
 </body>
 </html>
