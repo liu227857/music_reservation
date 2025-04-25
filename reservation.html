@@ -120,76 +120,76 @@
 	  const today = new Date();
 	  const todayOnly = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 	  const lastAllowedDate = new Date(todayOnly);
-	  lastAllowedDate.setDate(lastAllowedDate.getDate() + 30);
-      calendarTitle.innerText = `請選擇日期（未來 30 天內）`;
+	  lastAllowedDate.setDate(lastAllowedDate.getDate() + 37);
+      calendarTitle.innerText = `請選擇日期`;
 
 	  const monthsToShow = [0, 1];
 	  const thisMonth = today.getMonth();
 	  const thisYear = today.getFullYear();
 
 	  monthsToShow.forEach(offset => {
-      const monthDate = new Date(thisYear, thisMonth + offset);
-      const year = monthDate.getFullYear();
-      const month = monthDate.getMonth();
+        const monthDate = new Date(thisYear, thisMonth + offset);
+        const year = monthDate.getFullYear();
+        const month = monthDate.getMonth();
 
-      const monthLabel = document.createElement('div');
-      monthLabel.className = "col-span-7 font-bold text-lg mt-4";
-      monthLabel.innerText = `${year}年${month + 1}月`;
-      calendarGrid.appendChild(monthLabel);
+        const monthLabel = document.createElement('div');
+        monthLabel.className = "col-span-7 font-bold text-lg mt-4";
+        monthLabel.innerText = `${year}年${month + 1}月`;
+        calendarGrid.appendChild(monthLabel);
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-      for (let i = 0; i < firstDay; i++) {
-        calendarGrid.appendChild(document.createElement('div'));
-      }
+        for (let i = 0; i < firstDay; i++) {
+          calendarGrid.appendChild(document.createElement('div'));
+        }
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        const date = new Date(year, month, d);
-        const dateBtn = document.createElement('button');
-        dateBtn.innerText = d;
-        dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300';
+        for (let d = 1; d <= daysInMonth; d++) {
+          const date = new Date(year, month, d);
+          const dateBtn = document.createElement('button');
+          dateBtn.innerText = d;
+          dateBtn.className = 'bg-white rounded-lg p-2 shadow transition-colors duration-300';
 
-        // 檢查日期是否在可選範圍內，禁用不可選的日期
-        if (date < todayOnly || date > lastAllowedDate) {
-          dateBtn.classList.add('opacity-30');
-          dateBtn.disabled = true;
-        } else {
-          dateBtn.onclick = () => {
-            selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          // 檢查日期是否在可選範圍內，禁用不可選的日期
+          if (date < todayOnly || date > lastAllowedDate) {
+            dateBtn.classList.add('opacity-30');
+            dateBtn.disabled = true;
+          } else {
+            dateBtn.onclick = () => {
+              selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 
-			// 移除舊的選取樣式 & 回復樣式
-			document.querySelectorAll('#calendar-grid button').forEach(b => {
-			b.classList.remove('selected');
-			if (!b.disabled) {
-			  b.style.backgroundColor = 'white';
-			  b.style.color = 'black';
-			}
-			});
+			  // 移除舊的選取樣式 & 回復樣式
+			  document.querySelectorAll('#calendar-grid button').forEach(b => {
+			    b.classList.remove('selected');
+			    if (!b.disabled) {
+			      b.style.backgroundColor = 'white';
+			      b.style.color = 'black';
+			    }
+			  });
 
-			// 套用新的選取樣式
-			dateBtn.classList.add('selected');
-			dateBtn.style.backgroundColor = '#A1CAF1';
-			dateBtn.style.color = 'black';
+			  // 套用新的選取樣式
+			  dateBtn.classList.add('selected');
+			  dateBtn.style.backgroundColor = '#A1CAF1';
+			  dateBtn.style.color = 'black';
 
-			showMessage(`選擇日期：${selectedDate}`);
-			loadTimeSlots();
-        };
+			  showMessage(`選擇日期：${selectedDate}`);
+			  loadTimeSlots();
+            };
 
-          // 添加 hover 效果
-          dateBtn.addEventListener('mouseenter', () => {
-            if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
-              dateBtn.style.backgroundColor = '#A1CAF1';  // 改變背景色
-              dateBtn.style.color = 'black';  // 改變文字顏色
-            }
-          });
+            // 添加 hover 效果
+            dateBtn.addEventListener('mouseenter', () => {
+              if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
+                dateBtn.style.backgroundColor = '#A1CAF1';  // 改變背景色
+                dateBtn.style.color = 'black';  // 改變文字顏色
+              }
+            });
 
-          dateBtn.addEventListener('mouseleave', () => {
-            if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
-              dateBtn.style.backgroundColor = 'white';  // 恢復背景色
-              dateBtn.style.color = 'black';  // 恢復文字顏色
-            }
-          });
+            dateBtn.addEventListener('mouseleave', () => {
+              if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
+                dateBtn.style.backgroundColor = 'white';  // 恢復背景色
+                dateBtn.style.color = 'black';  // 恢復文字顏色
+              }
+            });
         }
 
         calendarGrid.appendChild(dateBtn);
@@ -219,19 +219,19 @@
 		.eq('room', selectedRoom)
 		.eq('date', selectedDate);
 
-	if (error) {
-      console.error('Error fetching reservations:', error);
-    return;
-	}
+	  if (error) {
+        console.error('Error fetching reservations:', error);
+      return;
+	  }
 
-	// 將已預約的時間段轉換為數字格式
-	const reserved = (reservations || []).map(r => ({
-      start: parseInt(r.start_time.slice(0, 5).replace(":", "")),
-      end: parseInt(r.end_time.slice(0, 5).replace(":", ""))
-    }));
+	  // 將已預約的時間段轉換為數字格式
+	  const reserved = (reservations || []).map(r => ({
+        start: parseInt(r.start_time.slice(0, 5).replace(":", "")),
+        end: parseInt(r.end_time.slice(0, 5).replace(":", ""))
+      }));
 
-	// 創建時間選項按鈕
-	for (let hour = startHour; hour < endHour; hour++) {
+	  // 創建時間選項按鈕
+	  for (let hour = startHour; hour < endHour; hour++) {
 		for (let min = 0; min < 60; min += 30) {
 		  const start = `${String(hour).padStart(2, '0')}:${min === 0 ? '00' : '30'}`;
 		  const end = `${String(min === 0 ? hour : hour + 1).padStart(2, '0')}:${min === 0 ? '30' : '00'}`;
@@ -269,40 +269,40 @@
 		  // 禁用 hover 效果：當時間被預約，禁止 hover 動效
 		  if (!isTaken) {
 			btn.addEventListener('mouseenter', () => {
-			if (!selectedSlots.some(s => s.start === start && s.end === end)) {
-              btn.style.backgroundColor = '#A1CAF1'; // Hover 顏色
-			}
-		  });
-          btn.addEventListener('mouseleave', () => {
-            if (!selectedSlots.some(s => s.start === start && s.end === end)) {
-              btn.style.backgroundColor = 'white'; // 恢復原本顏色
+			  if (!selectedSlots.some(s => s.start === start && s.end === end)) {
+                btn.style.backgroundColor = '#A1CAF1'; // Hover 顏色
+			  }
+		    });
+            btn.addEventListener('mouseleave', () => {
+              if (!selectedSlots.some(s => s.start === start && s.end === end)) {
+                btn.style.backgroundColor = 'white'; // 恢復原本顏色
+              }
+            });
+          }
+
+		  // 點擊選擇時間段
+		  btn.addEventListener('click', () => {
+            const selected = selectedSlots.some(s => s.start === start && s.end === end);
+            if (selected) {
+              selectedSlots = selectedSlots.filter(s => s.start !== start || s.end !== end);
+              btn.style.backgroundColor = 'white';
+              btn.classList.remove('text-white');
+              btn.classList.add('text-black');
+            } else {
+              selectedSlots.push({ start, end });
+              btn.style.backgroundColor = '#A1CAF1';
+              btn.classList.add('text-black');
+            }
+
+            const userInfo = document.getElementById('user-info');
+            if (userInfo) {
+              userInfo.classList.toggle('hidden', selectedSlots.length === 0);
             }
           });
-        }
 
-		// 點擊選擇時間段
-		btn.addEventListener('click', () => {
-          const selected = selectedSlots.some(s => s.start === start && s.end === end);
-          if (selected) {
-            selectedSlots = selectedSlots.filter(s => s.start !== start || s.end !== end);
-            btn.style.backgroundColor = 'white';
-            btn.classList.remove('text-white');
-            btn.classList.add('text-black');
-          } else {
-            selectedSlots.push({ start, end });
-            btn.style.backgroundColor = '#A1CAF1';
-            btn.classList.add('text-black');
-          }
-
-          const userInfo = document.getElementById('user-info');
-          if (userInfo) {
-            userInfo.classList.toggle('hidden', selectedSlots.length === 0);
-          }
-        });
-
-      container.appendChild(btn);
+        container.appendChild(btn);
 		}
-	}
+	  }
 	}
 
 
@@ -328,42 +328,42 @@
 	  const phone = document.getElementById('user-phone').value.trim();
 	  const mail = document.getElementById('user-mail').value.trim();
 
-	if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone || !mail) {
-      showMessage('❌ 請填寫所有預約資料！');
-    return;
-	}
-
-	// 檢查是否有衝突
-	for (let slot of selectedSlots) {
-      const { data: existing, error } = await supabaseClient
-        .from('reservations')
-        .select('*')
-        .eq('room', selectedRoom)
-        .eq('date', selectedDate)
-        .gt('end_time', slot.start)
-        .lt('start_time', slot.end);
-      if (existing.length > 0) {
-        showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
+	  if (!selectedRoom || !selectedDate || selectedSlots.length === 0 || !name || !phone || !mail) {
+        showMessage('❌ 請填寫所有預約資料！');
       return;
-    }
-   }
+	  }
 
-	const inserts = selectedSlots.map(slot => ({
-      room: selectedRoom,
-      date: selectedDate,
-      start_time: slot.start,
-      end_time: slot.end,
-      name,
-      phone,
-	  mail// 儲存電話
-    }));
+	  // 檢查是否有衝突
+	  for (let slot of selectedSlots) {
+        const { data: existing, error } = await supabaseClient
+          .from('reservations')
+          .select('*')
+          .eq('room', selectedRoom)
+          .eq('date', selectedDate)
+          .gt('end_time', slot.start)
+          .lt('start_time', slot.end);
+        if (existing.length > 0) {
+         showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
+         return;
+        }
+      }
 
-	const { error } = await supabaseClient.from('reservations').insert(inserts);
+	  const inserts = selectedSlots.map(slot => ({
+        room: selectedRoom,
+        date: selectedDate,
+        start_time: slot.start,
+        end_time: slot.end,
+        name,
+        phone,
+	    mail// 儲存電話
+      }));
+
+	  const { error } = await supabaseClient.from('reservations').insert(inserts);
 
 	  if (error) {
-		showMessage(`❌ 預約失敗：${error.message}`);
+	    showMessage(`❌ 預約失敗：${error.message}`);
 	  } else {
-      showMessage('✅ 預約成功！');
+        showMessage('✅ 預約成功！');
 
       // 清空選擇
       selectedSlots = [];
