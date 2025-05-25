@@ -8,9 +8,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6 text-sm">
-  <h1 class="text-2xl font-bold mb-4">小木笛預約管理後台</h1>
+<body class="bg-gray-100 p-6 text-sm"> 
 
+<!-- #### 登入時，輸入密碼的頁面 
+  <div class="min-h-screen flex items-center justify-center bg-gray-100" id="login-box">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-bold mb-6 text-center">登入後台</h2>
+    <form id="login-form" class="space-y-4">      
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
+        <input type="password" id="password" name="password" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">登入</button>
+	  <p id="error" class="text-red-500 text-sm"></p>
+    </form>
+  </div>
+  </div> -->
+
+
+
+  <!-- <div id="admin-content" style="display:none;"> -->
+  <h1 class="text-2xl font-bold mb-4">小木笛預約管理後台</h1>
   <div class="flex flex-wrap gap-4 items-center mb-4">
     <input type="date" id="filter-date" class="border p-2 rounded">
     <select id="filter-room" class="border p-2 rounded">
@@ -61,6 +80,8 @@
 	<input id="new-mail" type="text" class="border p-2 rounded" placeholder="信箱">
     <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition">新增</button>
   </div>
+  
+  <!-- </div> -->
 
 
 
@@ -137,16 +158,16 @@
 	
 	
 	
-  document.getElementById('exportExcelBtn').addEventListener('click', async () => {
-	const { data, error } = await supabaseClient
-      .from('reservations')
-      .select('*');
+	document.getElementById('exportExcelBtn').addEventListener('click', async () => {
+	  const { data, error } = await supabaseClient
+        .from('reservations')
+        .select('*');
 
-	if (error) {
-      alert('讀取預約資料失敗');
-      console.error(error);
-      return;
-  }
+	  if (error) {
+        alert('讀取預約資料失敗');
+        console.error(error);
+        return;
+    }
 
     // 根據日期 + 開始時間排序
     data.sort((a, b) => {
@@ -172,7 +193,23 @@
 
     // 下載 Excel
     XLSX.writeFile(workbook, "預約資料.xlsx");
-  });
+	});
+	
+	
+	
+	
+	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 自訂密碼（不要太簡單）
+    
+	document.getElementById("login-form").addEventListener("submit", function (event) {
+	event.preventDefault(); // ✅ 阻止頁面重新整理
+      const input = document.getElementById("password").value;
+      if (input === CORRECT_PASSWORD) {
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+      } else {
+        document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
+      }
+    })
   </script>
 </body>
 </html>

@@ -17,6 +17,24 @@
   </style>
 </head>
 <body class="bg-gray-100 p-4">
+
+<!-- #### 登入時，輸入密碼的頁面
+  <div class="min-h-screen flex items-center justify-center bg-gray-100" id="login-box">
+  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+    <h2 class="text-2xl font-bold mb-6 text-center">登入後台</h2>
+    <form id="login-form" class="space-y-4">      
+      <div>
+        <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
+        <input type="password" id="password" name="password" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">登入</button>
+	  <p id="error" class="text-red-500 text-sm"></p>
+    </form>
+  </div>
+  </div> -->
+
+<!-- <div id="admin-content" style="display:none;"> -->
 <div class="max-w-7xl mx-auto">
   <h1 class="text-2xl font-bold mb-4">小木笛預約行事曆</h1>
   <div class="flex flex-col md:flex-row">
@@ -30,7 +48,7 @@
     </div>
   </div>
 </div>
-  
+<!-- </div> -->
   
 
 
@@ -224,6 +242,22 @@
     // 下載 Excel
     XLSX.writeFile(workbook, "預約資料.xlsx");
   });
+  
+  
+  
+  
+	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 自訂密碼（不要太簡單）
+    
+	document.getElementById("login-form").addEventListener("submit", function (event) {
+	event.preventDefault(); // ✅ 阻止頁面重新整理
+      const input = document.getElementById("password").value;
+      if (input === CORRECT_PASSWORD) {
+        document.getElementById("login-box").style.display = "none";
+        document.getElementById("admin-content").style.display = "block";
+      } else {
+        document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
+      }
+    })
   </script>
 </body>
 </html>
