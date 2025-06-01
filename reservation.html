@@ -107,6 +107,7 @@
       document.getElementById('calendar').classList.remove('hidden');
       document.getElementById('time-slots').innerHTML = '';
       document.getElementById('message').innerText = '';
+	  document.getElementById('user-info').classList.add('hidden');
       buildCalendar();
     }
 
@@ -206,6 +207,8 @@
 	  selectedSlots = [];
 	  const startHour = 8;
 	  const endHour = 22;
+	  
+	  document.getElementById('user-info').classList.add('hidden');
 	  
 	  // 找尋過去時段
 	  const now = new Date();
