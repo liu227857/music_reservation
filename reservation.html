@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="小木笛預約系統">
   <title>小木笛預約系統</title>
@@ -172,7 +173,6 @@
 			  dateBtn.classList.add('selected');
 			  dateBtn.style.backgroundColor = '#A1CAF1';
 			  dateBtn.style.color = 'black';
-
 			  showMessage(`選擇日期：${selectedDate}`);
 			  loadTimeSlots();
             };
@@ -185,6 +185,7 @@
               }
             });
 
+			// 恢復 hover 效果
             dateBtn.addEventListener('mouseleave', () => {
               if (!dateBtn.classList.contains('selected') && !dateBtn.disabled) {
                 dateBtn.style.backgroundColor = 'white';  // 恢復背景色
@@ -192,7 +193,6 @@
               }
             });
         }
-
         calendarGrid.appendChild(dateBtn);
         }
 	});
@@ -344,7 +344,7 @@
           .eq('room', selectedRoom)
           .eq('date', selectedDate)
           .gt('end_time', slot.start)
-          .lt('start_time', slot.end);
+		  .lt('start_time', slot.end);
         if (existing.length > 0) {
          showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
          return;
@@ -362,19 +362,17 @@
       }));
 
 	  const { error } = await supabaseClient.from('reservations').insert(inserts);
-
 	  if (error) {
 	    showMessage(`❌ 預約失敗：${error.message}`);
 	  } else {
         showMessage('✅ 預約成功！');
 
-      // 清空選擇
-      selectedSlots = [];
-      document.getElementById('user-name').value = '';
-      document.getElementById('user-phone').value = '';  // 清空電話欄位
-	  document.getElementById('user-mail').value = '';  // 清空電話欄位
-
-      loadTimeSlots();
+		// 清空選擇
+		selectedSlots = [];
+		document.getElementById('user-name').value = '';
+		document.getElementById('user-phone').value = '';  // 清空電話欄位
+		document.getElementById('user-mail').value = '';  // 清空電話欄位
+		loadTimeSlots();
 	  }
     }
 
