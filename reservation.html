@@ -75,6 +75,11 @@
       <button onclick="submitReservation()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">提交預約</button>
     </div>
   </div>
+  
+	<!-- Loading overlay -->
+	<div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-60 flex items-center justify-center z-50 hidden">
+		<div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500 border-solid"></div>
+	</div>
 
 
 
@@ -324,6 +329,15 @@
 	}
 
 
+	// Loading 全螢幕擋住
+	function showLoading() {
+	  document.getElementById('loadingOverlay').classList.remove('hidden');
+	}
+
+	function hideLoading() {
+	  document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
 
 	// 提交預約函數
 	async function submitReservation() {
@@ -335,8 +349,10 @@
         showMessage('❌ 請填寫所有預約資料！');
       return;
 	  }
+	  
+	  showLoading();  // 顯示載入遮罩
 
-	  // 檢查是否有衝突
+	  // 檢查是否有衝突 (基本上有衝突選不到，只是預防萬一)
 	  for (let slot of selectedSlots) {
         const { data: existing, error } = await supabaseClient
           .from('reservations')
@@ -348,6 +364,7 @@
         if (existing.length > 0) {
          showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
          return;
+		 hideLoading();
         }
       }
 
@@ -362,10 +379,11 @@
       }));
 
 	  const { error } = await supabaseClient.from('reservations').insert(inserts);
+	  hideLoading(); // 解開遮罩
 	  if (error) {
 	    showMessage(`❌ 預約失敗：${error.message}`);
 	  } else {
-        showMessage('✅ 預約成功！');
+        showMessage('✅ 預約成功！'); // 解開遮罩
 
 		// 清空選擇
 		selectedSlots = [];
