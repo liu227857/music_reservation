@@ -4,53 +4,77 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>小木笛預約行事曆</title>
+  <title>小木笛預約行事曆｜登入版</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/index.global.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: sans-serif; }
     .fc-toolbar-title { font-size: 1.25rem; font-weight: bold; }
-    .fc-event { font-size: 0.75rem; }
+    .fc-event { font-size: 0.75rem; cursor: pointer; }
   </style>
 </head>
 <body class="bg-gray-100 p-4">
 
-<!-- #### 登入時，輸入密碼的頁面
-  <div class="min-h-screen flex items-center justify-center bg-gray-100" id="login-box">
-  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-    <h2 class="text-2xl font-bold mb-6 text-center">登入後台</h2>
-    <form id="login-form" class="space-y-4">      
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
-        <input type="password" id="password" name="password" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+  <!-- Supabase Auth 登入畫面 -->
+  <div id="login-screen" class="min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
+      <h1 class="text-2xl font-bold mb-2 text-center">小木笛預約行事曆</h1>
+      <p class="text-gray-500 text-sm mb-6 text-center">請使用 Supabase Auth 管理員帳號登入</p>
+
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input id="login-email" type="email" autocomplete="email" required
+                 class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="admin@example.com">
+        </div>
+
+        <div>
+          <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" required
+                 class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 placeholder="請輸入密碼">
+        </div>
+
+        <button id="login-button" type="submit"
+                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+          登入
+        </button>
+
+        <p id="login-message" class="text-sm text-red-500 min-h-[1.25rem]"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 登入後才顯示的管理行事曆 -->
+  <div id="app-screen" class="hidden max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
+      <h1 class="text-2xl font-bold">小木笛預約行事曆</h1>
+      <div class="flex flex-col md:flex-row md:items-center gap-2 text-sm">
+        <span id="user-email" class="text-gray-600"></span>
+        <button id="logout-btn" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-800 transition">登出</button>
       </div>
-      
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">登入</button>
-	  <p id="error" class="text-red-500 text-sm"></p>
-    </form>
-  </div>
-  </div> -->
-
-<!-- <div id="admin-content" style="display:none;"> -->
-<div class="max-w-7xl mx-auto">
-  <h1 class="text-2xl font-bold mb-4">小木笛預約行事曆</h1>
-  <div class="flex flex-col md:flex-row">
-    <div class="w-full md:w-1/4 p-2 mb-4 md:mb-0">
-      <div id="datepicker" class="bg-white p-2 rounded shadow"></div>
-      <button id="today-btn" class="mt-2 w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600">回到今天</button>
-      <button id="exportExcelBtn" class="mt-2 w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition">匯出 Excel</button>
     </div>
-    <div class="w-full md:w-3/4 p-2 overflow-x-auto">
-      <div id="calendar" class="min-w-[1000px] bg-white p-4 rounded shadow"></div>
+
+    <div class="flex flex-col md:flex-row">
+      <div class="w-full md:w-1/4 p-2 mb-4 md:mb-0">
+        <div id="datepicker" class="bg-white p-2 rounded shadow"></div>
+        <button id="today-btn" class="mt-2 w-full bg-blue-500 text-white py-1 rounded hover:bg-blue-600">回到今天</button>
+        <button id="exportExcelBtn" class="mt-2 w-full bg-gray-700 text-white py-1 rounded hover:bg-gray-800 transition">匯出 Excel</button>
+        <p class="mt-3 text-xs text-gray-500 leading-relaxed">
+          操作說明：在行事曆上拖曳可新增預約；點擊既有預約可刪除。
+        </p>
+      </div>
+
+      <div class="w-full md:w-3/4 p-2 overflow-x-auto">
+        <div id="calendar" class="min-w-[1000px] bg-white p-4 rounded shadow"></div>
+      </div>
     </div>
   </div>
-</div>
-<!-- </div> -->
-  
-
 
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.8/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/index.global.min.js"></script>
@@ -58,17 +82,102 @@
   <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.8/index.global.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/js/datepicker-full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.3.4/dist/css/datepicker.min.css">
 
   <script>
     const SUPABASE_URL = 'https://vvhsucjkomeffodahhdu.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FUMGXy_0O1bWgdf_CJ5Qtg_iR4UIgQW';
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
 
-    let calendar;
+    let calendar = null;
+    let datepicker = null;
 
     document.addEventListener('DOMContentLoaded', async function () {
+      document.getElementById('login-form').addEventListener('submit', handleLogin);
+      document.getElementById('logout-btn').addEventListener('click', handleLogout);
+      document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error) console.error('取得 session 失敗：', error);
+
+      if (data.session) {
+        await showApp(data.session.user);
+      } else {
+        showLogin();
+      }
+
+      supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          await showApp(session.user);
+        }
+        if (event === 'SIGNED_OUT') {
+          showLogin();
+        }
+      });
+    });
+
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const button = document.getElementById('login-button');
+      const message = document.getElementById('login-message');
+
+      message.textContent = '';
+      button.disabled = true;
+      button.textContent = '登入中...';
+
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      button.disabled = false;
+      button.textContent = '登入';
+
+      if (error) {
+        message.textContent = '登入失敗：' + error.message;
+      }
+    }
+
+    async function handleLogout() {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        alert('登出失敗：' + error.message);
+      }
+    }
+
+    function showLogin() {
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('user-email').textContent = '';
+
+      if (calendar) {
+        calendar.destroy();
+        calendar = null;
+      }
+    }
+
+    async function showApp(user) {
+      document.getElementById('login-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('hidden');
+      document.getElementById('user-email').textContent = user?.email ? `已登入：${user.email}` : '已登入';
+
+      if (!calendar) {
+        initCalendar();
+      } else {
+        await refreshEvents();
+      }
+    }
+
+    function initCalendar() {
       const calendarEl = document.getElementById('calendar');
       calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'timeGridWeek',
@@ -79,72 +188,63 @@
           right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
         slotDuration: '00:30:00',
-		
-		// 新增內容
-		selectable: true, // ✅ 讓使用者可以選取時間區段
-		select: async function (info) {
-          const input = prompt("請依序輸入：姓名, 房間名稱, 電話號碼, 信箱（用逗號分隔）\n例如：王小明, 小琴房, 0912345678, test@example.com");
-		  if (!input) return;
-		  const [name, room, phone, mail] = input.split(',').map(s => s.trim());
+        selectable: true,
 
-		  if (!name || !room || !phone || !mail) {
-			alert("輸入不完整，請重新輸入。");
-			return;
-		  }
+        select: async function (info) {
+          const input = prompt('請依序輸入：姓名, 房間名稱, 電話號碼, 信箱（用逗號分隔）\n例如：王小明, 小琴房, 0912345678, test@example.com');
+          if (!input) return;
 
-          const { data, error } = await supabaseClient.from('reservations').insert([
-            {
-              name,
-              room,
-			  phone,
-			  mail,
-              date: info.startStr.slice(0, 10),
-              start_time: info.startStr.slice(11, 16),
-              end_time: info.endStr.slice(11, 16)
-            }
-          ]);
-
-          if (error) {
-            alert("新增預約失敗：" + error.message);
+          const [name, room, phone, mail] = input.split(',').map(s => s.trim());
+          if (!name || !room || !phone || !mail) {
+            alert('輸入不完整，請重新輸入。');
             return;
           }
 
-          await refreshEvents(); // 重新載入事件
-          alert("新增成功！");
+          const { error } = await supabaseClient
+            .from('reservations')
+            .insert({
+              name,
+              room,
+              phone,
+              mail,
+              date: info.startStr.slice(0, 10),
+              start_time: info.startStr.slice(11, 16),
+              end_time: info.endStr.slice(11, 16)
+            });
+
+          if (error) {
+            alert('新增預約失敗：' + error.message);
+            return;
+          }
+
+          await refreshEvents();
+          alert('新增成功！');
         },
-		
-		
-      eventClick: async function (info) {
-        const confirmDelete = confirm(
-		  `確定要刪除這個預約嗎？\n` +
-		  `預約者：${info.event.extendedProps.name}\n` +
-		  `教室：${info.event.extendedProps.room}\n` +
-		  `電話：${info.event.extendedProps.phone}`
-		);
-        if (!confirmDelete) return;
 
-        const reservationId = info.event.extendedProps.id;
-        if (!reservationId) {
-          alert("刪除失敗：找不到這筆預約的 id。");
-          return;
-        }
+        eventClick: async function (info) {
+          const confirmDelete = confirm(
+            `確定要刪除這個預約嗎？\n` +
+            `預約者：${info.event.extendedProps.name}\n` +
+            `教室：${info.event.extendedProps.room}\n` +
+            `電話：${info.event.extendedProps.phone}`
+          );
+          if (!confirmDelete) return;
 
-        const { error } = await supabaseClient
-          .from('reservations')
-          .delete()
-          .eq('id', reservationId);
+          const { error } = await supabaseClient
+            .from('reservations')
+            .delete()
+            .eq('id', info.event.extendedProps.id);
 
-        if (error) {
-          alert("刪除失敗：" + error.message);
-          return;
-        }
+          if (error) {
+            alert('刪除失敗：' + error.message);
+            return;
+          }
 
-		await refreshEvents(); // ✅ 這行會重新載入資料
-        alert("刪除成功！");
-      },
-	  
-	  
-        datesSet: async function(info) {
+          await refreshEvents();
+          alert('刪除成功！');
+        },
+
+        datesSet: async function (info) {
           const events = await loadEvents(info.start, info.end);
           calendar.removeAllEvents();
           calendar.addEventSource(events);
@@ -153,22 +253,20 @@
 
       calendar.render();
 
-      // 初始化小行事曆
-      const datepicker = new Datepicker(document.getElementById('datepicker'), {
+      datepicker = new Datepicker(document.getElementById('datepicker'), {
         language: 'zh-TW',
         autohide: true
       });
+
       document.getElementById('datepicker').addEventListener('changeDate', (e) => {
         calendar.gotoDate(e.detail.date);
       });
 
       document.getElementById('today-btn').addEventListener('click', () => {
         calendar.today();
-		// 更新小日曆的日期為今天
-		const today = new Date();
-		datepicker.setDate(today);
+        datepicker.setDate(new Date());
       });
-    });
+    }
 
     async function loadEvents(start, end) {
       const { data, error } = await supabaseClient
@@ -179,92 +277,64 @@
 
       if (error) {
         console.error('載入錯誤：', error);
+        alert('載入預約資料失敗：' + error.message);
         return [];
       }
 
-      return data.map(r => ({
-		title: `${r.name || ''} (${r.room})`, // 顯示姓名加房間
-		start: `${r.date}T${r.start_time}`,
-		end: `${r.date}T${r.end_time}`,
-		extendedProps: {
+      return (data || []).map(r => ({
+        title: `${r.name || ''} (${r.room || ''})`,
+        start: `${r.date}T${r.start_time}`,
+        end: `${r.date}T${r.end_time}`,
+        extendedProps: {
           id: r.id,
-		  name: r.name || '',
-		  room: r.room || '',    // 預約的房間
-		  phone: r.phone || '',  // 預約的電話
-          mail: r.mail || '',
-		}
-	  }));
+          name: r.name || '',
+          room: r.room || '',
+          phone: r.phone || '',
+          mail: r.mail || ''
+        }
+      }));
     }
-	
-	
-	async function refreshEvents() {
-	  const view = calendar.view;
-	  const start = view.activeStart;
-	  const end = view.activeEnd;
 
-	  const events = await loadEvents(start, end);
-	  calendar.removeAllEvents();
-	  calendar.addEventSource(events);
-	}
-	
-	
-  document.getElementById('exportExcelBtn').addEventListener('click', async () => {
-	const { data, error } = await supabaseClient
-      .from('reservations')
-      .select('id,date,start_time,end_time,room,name,phone,mail');
+    async function refreshEvents() {
+      if (!calendar) return;
+      const view = calendar.view;
+      const events = await loadEvents(view.activeStart, view.activeEnd);
+      calendar.removeAllEvents();
+      calendar.addEventSource(events);
+    }
 
-	if (error) {
-      alert('讀取預約資料失敗');
-      console.error(error);
-      return;
-  }
+    async function exportExcel() {
+      const { data, error } = await supabaseClient
+        .from('reservations')
+        .select('id,date,start_time,end_time,room,name,phone,mail');
 
-    // 根據日期 + 開始時間排序
-    data.sort((a, b) => {
-      const dateA = `${a.date}T${a.start_time}`;
-      const dateB = `${b.date}T${b.start_time}`;
-      return new Date(dateA) - new Date(dateB);
-    });
+      if (error) {
+        alert('讀取預約資料失敗：' + error.message);
+        console.error(error);
+        return;
+      }
 
-    // 轉換成 Excel 資料格式
-    const exportData = data.map(item => ({
-      日期: item.date,
-      開始時間: item.start_time,
-      結束時間: item.end_time,
-	  房間: item.room,
-	  預約人: item.name,
-      電話: item.phone,
-      信箱: item.mail,
-    }));
+      const sorted = [...(data || [])].sort((a, b) => {
+        const dateA = `${a.date}T${a.start_time}`;
+        const dateB = `${b.date}T${b.start_time}`;
+        return new Date(dateA) - new Date(dateB);
+      });
 
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "預約資料");
+      const exportData = sorted.map(item => ({
+        日期: item.date,
+        開始時間: item.start_time,
+        結束時間: item.end_time,
+        房間: item.room,
+        預約人: item.name,
+        電話: item.phone,
+        信箱: item.mail
+      }));
 
-    // 下載 Excel
-    XLSX.writeFile(workbook, "預約資料.xlsx");
-  });
-  
-  
-  
-  
-	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 這只是前端簡易密碼，不等同真正後端權限保護。
-    
-	document.addEventListener("DOMContentLoaded", function () {
-	  const loginForm = document.getElementById("login-form");
-	  if (!loginForm) return;
-
-	  loginForm.addEventListener("submit", function (event) {
-	    event.preventDefault(); // ✅ 阻止頁面重新整理
-	    const input = document.getElementById("password").value;
-	    if (input === CORRECT_PASSWORD) {
-	      document.getElementById("login-box").style.display = "none";
-	      document.getElementById("admin-content").style.display = "block";
-	    } else {
-	      document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
-	    }
-	  });
-	});
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '預約資料');
+      XLSX.writeFile(workbook, '預約資料.xlsx');
+    }
   </script>
 </body>
 </html>

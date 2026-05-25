@@ -4,217 +4,334 @@
   <meta charset="UTF-8">
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>小木笛預約管理後台</title>
+  <title>小木笛預約管理後台｜登入版</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6 text-sm"> 
+<body class="bg-gray-100 p-6 text-sm">
 
-<!-- #### 登入時，輸入密碼的頁面 
-  <div class="min-h-screen flex items-center justify-center bg-gray-100" id="login-box">
-  <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-    <h2 class="text-2xl font-bold mb-6 text-center">登入後台</h2>
-    <form id="login-form" class="space-y-4">      
+  <!-- Supabase Auth 登入區塊 -->
+  <div id="login-box" class="min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
+      <h2 class="text-2xl font-bold mb-2 text-center">登入管理後台</h2>
+      <p class="text-gray-500 text-center mb-6">請使用 Supabase Auth 管理員帳號登入</p>
+      <form id="login-form" class="space-y-4">
+        <div>
+          <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" id="login-email" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="username" required>
+        </div>
+        <div>
+          <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" id="login-password" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" autocomplete="current-password" required>
+        </div>
+        <button type="submit" id="login-button" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">登入</button>
+        <p id="login-error" class="text-red-500 text-sm min-h-[1.25rem]"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- 後台內容：登入成功後才顯示 -->
+  <div id="admin-content" class="hidden">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
       <div>
-        <label for="password" class="block text-sm font-medium text-gray-700">密碼</label>
-        <input type="password" id="password" name="password" class="mt-1 w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <h1 class="text-2xl font-bold">小木笛預約管理後台</h1>
+        <p id="current-user" class="text-gray-500 mt-1"></p>
       </div>
-      
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">登入</button>
-	  <p id="error" class="text-red-500 text-sm"></p>
-    </form>
+      <button id="logout-button" class="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 transition">登出</button>
+    </div>
+
+    <div class="flex flex-wrap gap-4 items-center mb-4">
+      <input type="date" id="filter-date" class="border p-2 rounded">
+      <select id="filter-room" class="border p-2 rounded">
+        <option value="">全部琴房</option>
+        <option value="小琴房">小琴房</option>
+        <option value="大琴房">大琴房</option>
+        <option value="平台琴房">平台琴房</option>
+        <option value="鼓室">鼓室</option>
+        <option value="活動場地">活動場地</option>
+      </select>
+      <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition">查詢</button>
+      <button id="exportExcelBtn" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-800 transition">匯出 Excel</button>
+    </div>
+
+    <!-- 查詢結果表格容器 -->
+    <div id="results-container" class="hidden mt-4 overflow-x-auto">
+      <table class="w-full bg-white rounded shadow">
+        <thead class="bg-blue-100">
+          <tr>
+            <th class="p-2 text-left">日期</th>
+            <th class="p-2 text-left">時間</th>
+            <th class="p-2 text-left">琴房</th>
+            <th class="p-2 text-left">姓名</th>
+            <th class="p-2 text-left">電話</th>
+            <th class="p-2 text-left">信箱</th>
+            <th class="p-2 text-left">操作</th>
+          </tr>
+        </thead>
+        <tbody id="reservation-table"></tbody>
+      </table>
+    </div>
+
+    <h2 class="text-xl mt-8 font-bold">➕ 新增預約</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+      <input id="new-date" type="date" class="border p-2 rounded" placeholder="日期">
+      <select id="new-room" class="border p-2 rounded">
+        <option value="小琴房">小琴房</option>
+        <option value="大琴房">大琴房</option>
+        <option value="平台琴房">平台琴房</option>
+        <option value="鼓室">鼓室</option>
+        <option value="活動場地">活動場地</option>
+      </select>
+      <input id="new-start" type="time" class="border p-2 rounded" placeholder="開始時間">
+      <input id="new-end" type="time" class="border p-2 rounded" placeholder="結束時間">
+      <input id="new-name" type="text" class="border p-2 rounded" placeholder="姓名">
+      <input id="new-phone" type="text" class="border p-2 rounded" placeholder="電話">
+      <input id="new-mail" type="email" class="border p-2 rounded" placeholder="信箱">
+      <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition">新增</button>
+    </div>
   </div>
-  </div> -->
-
-
-
-  <!-- <div id="admin-content" style="display:none;"> -->
-  <h1 class="text-2xl font-bold mb-4">小木笛預約管理後台</h1>
-  <div class="flex flex-wrap gap-4 items-center mb-4">
-    <input type="date" id="filter-date" class="border p-2 rounded">
-    <select id="filter-room" class="border p-2 rounded">
-      <option value="">全部琴房</option>
-      <option value="小琴房">小琴房</option>
-      <option value="大琴房">大琴房</option>
-      <option value="平台琴房">平台琴房</option>
-      <option value="鼓室">鼓室</option>
-	  <option value="活動場地">活動場地</option>
-    </select>
-    <button onclick="loadReservations()" class="bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-500 transition">查詢</button>
-	<button id="exportExcelBtn" class="bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-800 transition"> 匯出 Excel </button>
-  </div>
-
-  <!-- 查詢結果表格容器 -->
-  <div id="results-container" class="hidden mt-4">
-	<table class="w-full bg-white rounded shadow">
-      <thead class="bg-blue-100">
-		<tr>
-          <th class="p-2 text-left">日期</th>
-          <th class="p-2 text-left">時間</th>
-          <th class="p-2 text-left">琴房</th>
-          <th class="p-2 text-left">姓名</th>
-          <th class="p-2 text-left">電話</th>
-		  <th class="p-2 text-left">信箱</th>
-          <th class="p-2 text-left">操作</th>
-        </tr>
-      </thead>
-      <tbody id="reservation-table"></tbody>
-	</table>
-  </div>
-
-
-  <h2 class="text-xl mt-8 font-bold">➕ 新增預約</h2>
-  <div class="grid grid-cols-2 gap-4 mt-2">
-    <input id="new-date" type="date" class="border p-2 rounded" placeholder="日期">
-    <select id="new-room" class="border p-2 rounded">
-      <option value="小琴房">小琴房</option>
-      <option value="大琴房">大琴房</option>
-      <option value="平台琴房">平台琴房</option>
-      <option value="鼓室">鼓室</option>
-	  <option value="活動場地">活動場地</option>
-    </select>
-    <input id="new-start" type="time" class="border p-2 rounded" placeholder="開始時間">
-    <input id="new-end" type="time" class="border p-2 rounded" placeholder="結束時間">
-    <input id="new-name" type="text" class="border p-2 rounded" placeholder="姓名">
-    <input id="new-phone" type="text" class="border p-2 rounded" placeholder="電話">
-	<input id="new-mail" type="text" class="border p-2 rounded" placeholder="信箱">
-    <button onclick="addReservation()" class="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition">新增</button>
-  </div>
-  
-  <!-- </div> -->
-
-
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script> 
+  <script>
     const SUPABASE_URL = 'https://vvhsucjkomeffodahhdu.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FUMGXy_0O1bWgdf_CJ5Qtg_iR4UIgQW';
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
 
+    function escapeHTML(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
+    async function getCurrentUser() {
+      const { data, error } = await supabaseClient.auth.getUser();
+      if (error) return null;
+      return data.user || null;
+    }
+
+    async function requireLogin() {
+      const user = await getCurrentUser();
+      if (!user) {
+        alert('請先登入管理後台');
+        showLogin();
+        return null;
+      }
+      return user;
+    }
+
+    function showLogin() {
+      document.getElementById('login-box').classList.remove('hidden');
+      document.getElementById('admin-content').classList.add('hidden');
+      document.getElementById('current-user').textContent = '';
+    }
+
+    function showAdmin(user) {
+      document.getElementById('login-box').classList.add('hidden');
+      document.getElementById('admin-content').classList.remove('hidden');
+      document.getElementById('current-user').textContent = `目前登入：${user.email || 'authenticated user'}`;
+    }
+
+    async function initAuthState() {
+      const user = await getCurrentUser();
+      if (user) {
+        showAdmin(user);
+        await loadReservations();
+      } else {
+        showLogin();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('login-form').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const loginButton = document.getElementById('login-button');
+        const loginError = document.getElementById('login-error');
+
+        loginError.textContent = '';
+        loginButton.disabled = true;
+        loginButton.textContent = '登入中...';
+
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+        loginButton.disabled = false;
+        loginButton.textContent = '登入';
+
+        if (error) {
+          loginError.textContent = `登入失敗：${error.message}`;
+          return;
+        }
+
+        showAdmin(data.user);
+        //await loadReservations();
+      });
+
+      document.getElementById('logout-button').addEventListener('click', async function () {
+        await supabaseClient.auth.signOut();
+        document.getElementById('reservation-table').innerHTML = '';
+        document.getElementById('results-container').classList.add('hidden');
+        showLogin();
+      });
+
+      document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+
+      initAuthState();
+    });
 
     async function loadReservations() {
+      const user = await requireLogin();
+      if (!user) return;
+
       const date = document.getElementById('filter-date').value;
       const room = document.getElementById('filter-room').value;
 
-      let query = supabaseClient.from('reservations').select('id,date,start_time,end_time,room,name,phone,mail');
+      let query = supabaseClient
+        .from('reservations')
+        .select('id,date,start_time,end_time,room,name,phone,mail');
+
       if (date) query = query.eq('date', date);
       if (room) query = query.eq('room', room);
 
-      const { data, error } = await query.order('date', { ascending: true }).order('start_time');
-      if (error) return alert('查詢失敗');
+      const { data, error } = await query
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (error) {
+        console.error(error);
+        alert('查詢失敗：' + error.message);
+        return;
+      }
 
       const tbody = document.getElementById('reservation-table');
       tbody.innerHTML = '';
-      for (const r of data) {
-        console.log('產生按鈕 id:', r.id);
-	  const tr = document.createElement('tr');
-		tr.innerHTML = `
-		<td class="p-2">${r.date}</td>
-		<td class="p-2">${r.start_time} - ${r.end_time}</td>
-		<td class="p-2">${r.room}</td>
-		<td class="p-2">${r.name || ''}</td>
-		<td class="p-2">${r.phone || ''}</td>
-		<td class="p-2">${r.mail || ''}</td>
-		<td class="p-2">
-		<button onclick="deleteReservation('${r.id}')" class="bg-red-500 text-white px-2 py-1 rounded">刪除</button>
-		</td>`;
+
+      for (const r of data || []) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-2">${escapeHTML(r.date)}</td>
+          <td class="p-2">${escapeHTML(r.start_time)} - ${escapeHTML(r.end_time)}</td>
+          <td class="p-2">${escapeHTML(r.room)}</td>
+          <td class="p-2">${escapeHTML(r.name)}</td>
+          <td class="p-2">${escapeHTML(r.phone)}</td>
+          <td class="p-2">${escapeHTML(r.mail)}</td>
+          <td class="p-2">
+            <button data-id="${escapeHTML(r.id)}" class="delete-btn bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">刪除</button>
+          </td>`;
         tbody.appendChild(tr);
       }
-	  document.getElementById('results-container').classList.remove('hidden');
+
+      tbody.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', () => deleteReservation(button.dataset.id));
+      });
+
+      document.getElementById('results-container').classList.remove('hidden');
     }
-
-
-
 
     async function deleteReservation(id) {
+      const user = await requireLogin();
+      if (!user) return;
+
       if (!confirm('確認要刪除這筆預約嗎？')) return;
-      const { error } = await supabaseClient.from('reservations').delete().eq('id', id);
-      if (error) return alert('刪除失敗');
-      loadReservations();
+
+      const { error } = await supabaseClient
+        .from('reservations')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error(error);
+        alert('刪除失敗：' + error.message);
+        return;
+      }
+
+      await loadReservations();
     }
 
-
-
     async function addReservation() {
+      const user = await requireLogin();
+      if (!user) return;
+
       const date = document.getElementById('new-date').value;
       const room = document.getElementById('new-room').value;
       const start = document.getElementById('new-start').value;
       const end = document.getElementById('new-end').value;
-      const name = document.getElementById('new-name').value;
-      const phone = document.getElementById('new-phone').value;
-	  const mail = document.getElementById('new-mail').value;
+      const name = document.getElementById('new-name').value.trim();
+      const phone = document.getElementById('new-phone').value.trim();
+      const mail = document.getElementById('new-mail').value.trim();
 
-      if (!date || !start || !end || !room) return alert('請填寫完整資訊');
-      const { error } = await supabaseClient.from('reservations').insert({
-        date, room, start_time: start, end_time: end, name, phone, mail
-      });
-      if (error) return alert('新增失敗');
+      if (!date || !start || !end || !room) {
+        alert('請填寫日期、房間、開始時間與結束時間');
+        return;
+      }
+
+      const { error } = await supabaseClient
+        .from('reservations')
+        .insert({ date, room, start_time: start, end_time: end, name, phone, mail });
+
+      if (error) {
+        console.error(error);
+        alert('新增失敗：' + error.message);
+        return;
+      }
 
       alert('新增成功');
-      loadReservations();
+      document.getElementById('new-date').value = '';
+      document.getElementById('new-start').value = '';
+      document.getElementById('new-end').value = '';
+      document.getElementById('new-name').value = '';
+      document.getElementById('new-phone').value = '';
+      document.getElementById('new-mail').value = '';
+      await loadReservations();
     }
-	
-	
-	
-	document.getElementById('exportExcelBtn').addEventListener('click', async () => {
-	  const { data, error } = await supabaseClient
-        .from('reservations')
-        .select('id,date,start_time,end_time,room,name,phone,mail');
 
-	  if (error) {
-        alert('讀取預約資料失敗');
+    async function exportExcel() {
+      const user = await requireLogin();
+      if (!user) return;
+
+      const { data, error } = await supabaseClient
+        .from('reservations')
+        .select('date,start_time,end_time,room,name,phone,mail');
+
+      if (error) {
+        alert('讀取預約資料失敗：' + error.message);
         console.error(error);
         return;
+      }
+
+      const rows = data || [];
+      rows.sort((a, b) => {
+        const dateA = `${a.date}T${a.start_time}`;
+        const dateB = `${b.date}T${b.start_time}`;
+        return new Date(dateA) - new Date(dateB);
+      });
+
+      const exportData = rows.map(item => ({
+        日期: item.date,
+        開始時間: item.start_time,
+        結束時間: item.end_time,
+        房間: item.room,
+        預約人: item.name,
+        電話: item.phone,
+        信箱: item.mail,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, '預約資料');
+      XLSX.writeFile(workbook, '預約資料.xlsx');
     }
-
-    // 根據日期 + 開始時間排序
-    data.sort((a, b) => {
-      const dateA = `${a.date}T${a.start_time}`;
-      const dateB = `${b.date}T${b.start_time}`;
-      return new Date(dateA) - new Date(dateB);
-    });
-
-    // 轉換成 Excel 資料格式
-    const exportData = data.map(item => ({
-      日期: item.date,
-      開始時間: item.start_time,
-      結束時間: item.end_time,
-	  房間: item.room,
-	  預約人: item.name,
-      電話: item.phone,
-      信箱: item.mail,
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "預約資料");
-
-    // 下載 Excel
-    XLSX.writeFile(workbook, "預約資料.xlsx");
-	});
-	
-	
-	
-	
-	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 這只是前端簡易密碼，不等同真正後端權限保護。
-    
-	document.addEventListener("DOMContentLoaded", function () {
-	  const loginForm = document.getElementById("login-form");
-	  if (!loginForm) return;
-
-	  loginForm.addEventListener("submit", function (event) {
-	    event.preventDefault(); // ✅ 阻止頁面重新整理
-	    const input = document.getElementById("password").value;
-	    if (input === CORRECT_PASSWORD) {
-	      document.getElementById("login-box").style.display = "none";
-	      document.getElementById("admin-content").style.display = "block";
-	    } else {
-	      document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
-	    }
-	  });
-	});
   </script>
 </body>
 </html>
