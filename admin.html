@@ -145,7 +145,7 @@
       const user = await getCurrentUser();
       if (user) {
         showAdmin(user);
-        await loadReservations();
+        //await loadReservations();
       } else {
         showLogin();
       }
