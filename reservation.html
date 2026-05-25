@@ -86,9 +86,13 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    const SUPABASE_URL = 'https://vvhsucjkomeffodahhdu.supabase.co';
+
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FUMGXy_0O1bWgdf_CJ5Qtg_iR4UIgQW';
+
     const supabaseClient = supabase.createClient(
-      'https://vvhsucjkomeffodahhdu.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio'
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY
     );
 
     let selectedRoom = '';
@@ -357,15 +361,21 @@
 	  for (let slot of selectedSlots) {
         const { data: existing, error } = await supabaseClient
           .from('reservations')
-          .select('*')
+          .select('start_time')
           .eq('room', selectedRoom)
           .eq('date', selectedDate)
           .gt('end_time', slot.start)
 		  .lt('start_time', slot.end);
-        if (existing.length > 0) {
-         showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
-         return;
-		 hideLoading();
+        if (error) {
+          hideLoading();
+          showMessage(`❌ 檢查預約衝突失敗：${error.message}`);
+          return;
+        }
+
+        if ((existing || []).length > 0) {
+          hideLoading();
+          showMessage(`❌ 時段 ${slot.start} - ${slot.end} 已被預約`);
+          return;
         }
       }
 
