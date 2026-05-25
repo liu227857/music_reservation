@@ -5,7 +5,7 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>小木笛預約管理後台</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-6 text-sm"> 
@@ -87,10 +87,10 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script> 
-    const supabaseClient = supabase.createClient(
-	'https://vvhsucjkomeffodahhdu.supabase.co',
-	'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2aHN1Y2prb21lZmZvZGFoaGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM4Mjk5MzUsImV4cCI6MjA1OTQwNTkzNX0.iSR2lb4aztu68xFMgekFwOQXTYprezf3bIJprn2zyio'
-	);
+    const SUPABASE_URL = 'https://vvhsucjkomeffodahhdu.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_FUMGXy_0O1bWgdf_CJ5Qtg_iR4UIgQW';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 
 
@@ -98,7 +98,7 @@
       const date = document.getElementById('filter-date').value;
       const room = document.getElementById('filter-room').value;
 
-      let query = supabaseClient.from('reservations').select('*');
+      let query = supabaseClient.from('reservations').select('id,date,start_time,end_time,room,name,phone,mail');
       if (date) query = query.eq('date', date);
       if (room) query = query.eq('room', room);
 
@@ -161,7 +161,7 @@
 	document.getElementById('exportExcelBtn').addEventListener('click', async () => {
 	  const { data, error } = await supabaseClient
         .from('reservations')
-        .select('*');
+        .select('id,date,start_time,end_time,room,name,phone,mail');
 
 	  if (error) {
         alert('讀取預約資料失敗');
@@ -198,18 +198,23 @@
 	
 	
 	
-	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 自訂密碼（不要太簡單）
+	const CORRECT_PASSWORD = "LWS20250221"; // ⚠️ 這只是前端簡易密碼，不等同真正後端權限保護。
     
-	document.getElementById("login-form").addEventListener("submit", function (event) {
-	event.preventDefault(); // ✅ 阻止頁面重新整理
-      const input = document.getElementById("password").value;
-      if (input === CORRECT_PASSWORD) {
-        document.getElementById("login-box").style.display = "none";
-        document.getElementById("admin-content").style.display = "block";
-      } else {
-        document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
-      }
-    })
+	document.addEventListener("DOMContentLoaded", function () {
+	  const loginForm = document.getElementById("login-form");
+	  if (!loginForm) return;
+
+	  loginForm.addEventListener("submit", function (event) {
+	    event.preventDefault(); // ✅ 阻止頁面重新整理
+	    const input = document.getElementById("password").value;
+	    if (input === CORRECT_PASSWORD) {
+	      document.getElementById("login-box").style.display = "none";
+	      document.getElementById("admin-content").style.display = "block";
+	    } else {
+	      document.getElementById("error").textContent = "密碼錯誤，請再試一次。";
+	    }
+	  });
+	});
   </script>
 </body>
 </html>
